@@ -13,6 +13,7 @@ describe('HomeAssistant extension', () => {
     let version;
     let controller;
     let extension;
+    let origin;
 
     let resetExtension = async () => {
         await controller.enableDisableExtension(false, 'HomeAssistant');
@@ -32,6 +33,7 @@ describe('HomeAssistant extension', () => {
 
     beforeAll(async () => {
         version = await require('../lib/util/utils').default.getZigbee2MQTTVersion();
+        origin = {name: 'Zigbee2MQTT', sw: version.version, url: 'https://www.zigbee2mqtt.io'}
         version = `Zigbee2MQTT ${version.version}`;
         jest.useFakeTimers();
         settings.set(['homeassistant'], true);
@@ -58,10 +60,8 @@ describe('HomeAssistant extension', () => {
             configs.forEach((c) => {
                 const id = c['type'] + '/' + c['object_id'];
                 if (cfg_type_object_ids.includes(id)) {
-                    if (typeof d.exposes == 'function') {
-                        // A dynamic function must exposes all possible attributes for the docs
-                        console.warn(`${d.model} dynamic exposes contains duplicated ${id}`)
-                    } else {
+                    // A dynamic function must exposes all possible attributes for the docs
+                    if (typeof d.exposes != 'function') {
                         duplicated.push(d.model);
                     }
                 } else {
@@ -91,7 +91,7 @@ describe('HomeAssistant extension', () => {
             "max_mireds": 454,
             "min_mireds": 250,
             "json_attributes_topic":"zigbee2mqtt/ha_discovery_group",
-            "name":"ha_discovery_group",
+            "name":null,
             "schema":"json",
             "state_topic":"zigbee2mqtt/ha_discovery_group",
             "supported_color_modes":[
@@ -111,13 +111,15 @@ describe('HomeAssistant extension', () => {
                 "stop_effect",
                 "stop_hue_effect",
             ],
-            "unique_id":"9_light_zigbee2mqtt"
+            "object_id":"ha_discovery_group",
+            "unique_id":"9_light_zigbee2mqtt",
+            'origin': origin,
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/1221051039810110150109113116116_9/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -130,18 +132,20 @@ describe('HomeAssistant extension', () => {
                "sw_version": version,
             },
             "json_attributes_topic":"zigbee2mqtt/ha_discovery_group",
-            "name":"ha_discovery_group",
+            "name":null,
             "payload_off":"OFF",
             "payload_on":"ON",
             "state_topic":"zigbee2mqtt/ha_discovery_group",
+            "object_id":"ha_discovery_group",
             "unique_id":"9_switch_zigbee2mqtt",
+            'origin': origin,
             "value_template":"{{ value_json.state }}"
          };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/switch/1221051039810110150109113116116_9/switch/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -152,8 +156,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -168,7 +173,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -179,8 +184,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.humidity }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_humidity',
+            'object_id': 'weather_sensor_humidity',
             'unique_id': '0x0017880104e45522_humidity_zigbee2mqtt',
+            'origin': origin,
             'enabled_by_default': true,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -195,19 +201,20 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/humidity/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
         payload = {
             'unit_of_measurement': 'hPa',
-            'device_class': 'pressure',
+            'device_class': 'atmospheric_pressure',
             'state_class': 'measurement',
             'value_template': '{{ value_json.pressure }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_pressure',
+            'object_id': 'weather_sensor_pressure',
             'unique_id': '0x0017880104e45522_pressure_zigbee2mqtt',
+            'origin': origin,
             'enabled_by_default': true,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -222,7 +229,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/pressure/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -233,8 +240,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.battery }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_battery',
+            'object_id': 'weather_sensor_battery',
             'unique_id': '0x0017880104e45522_battery_zigbee2mqtt',
+            'origin': origin,
             'enabled_by_default': true,
             'entity_category': 'diagnostic',
             'device': {
@@ -250,7 +258,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/battery/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -263,8 +271,10 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.linkquality }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_linkquality',
+            'name': 'Linkquality',
+            'object_id': 'weather_sensor_linkquality',
             'unique_id': '0x0017880104e45522_linkquality_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -278,7 +288,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/linkquality/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -295,18 +305,20 @@ describe('HomeAssistant extension', () => {
                 "sw_version": null
             },
             "json_attributes_topic":"zigbee2mqtt/wall_switch_double",
-            "name":"wall_switch_double_left",
+            "name":"Left",
             "payload_off":"OFF",
             "payload_on":"ON",
             "state_topic":"zigbee2mqtt/wall_switch_double",
+            "object_id":"wall_switch_double_left",
             "unique_id":"0x0017880104e45542_switch_left_zigbee2mqtt",
+            'origin': origin,
             "value_template":"{{ value_json.state_left }}"
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/switch/0x0017880104e45542/switch_left/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -323,18 +335,20 @@ describe('HomeAssistant extension', () => {
                 "sw_version": null
             },
             "json_attributes_topic":"zigbee2mqtt/wall_switch_double",
-            "name":"wall_switch_double_right",
+            "name":"Right",
             "payload_off":"OFF",
             "payload_on":"ON",
             "state_topic":"zigbee2mqtt/wall_switch_double",
+            "object_id":"wall_switch_double_right",
             "unique_id":"0x0017880104e45542_switch_right_zigbee2mqtt",
+            'origin': origin,
             "value_template":"{{ value_json.state_right }}"
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/switch/0x0017880104e45542/switch_right/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -366,16 +380,18 @@ describe('HomeAssistant extension', () => {
                 "stop_effect"
             ],
             "json_attributes_topic":"zigbee2mqtt/bulb",
-            "name":"bulb",
+            "name":null,
             "schema":"json",
             "state_topic":"zigbee2mqtt/bulb",
+            "object_id":"bulb",
             "unique_id":"0x000b57fffec6a5b2_light_zigbee2mqtt",
+            'origin': origin,
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/0x000b57fffec6a5b2/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -402,8 +418,9 @@ describe('HomeAssistant extension', () => {
             'value_template': "{{ value_json.temperature }}",
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -417,7 +434,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -428,8 +445,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.humidity }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_humidity',
+            'object_id': 'weather_sensor_humidity',
             'unique_id': '0x0017880104e45522_humidity_zigbee2mqtt',
+            'origin': origin,
             'enabled_by_default': true,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -444,20 +462,21 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/humidity/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
         payload = {
             'unit_of_measurement': 'hPa',
-            'device_class': 'pressure',
+            'device_class': 'atmospheric_pressure',
             'state_class': 'measurement',
             'value_template': '{{ value_json.pressure }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_pressure',
             'enabled_by_default': true,
+            'object_id': 'weather_sensor_pressure',
             'unique_id': '0x0017880104e45522_pressure_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -471,7 +490,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/pressure/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -512,9 +531,10 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
             'enabled_by_default': true,
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -530,7 +550,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -541,7 +561,6 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.humidity }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_humidity',
             'enabled_by_default': true,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -550,15 +569,17 @@ describe('HomeAssistant extension', () => {
                 'model': 'custom model',
                 'manufacturer': 'Not from Xiaomi',
             },
+            'origin': origin,
             'availability': [{topic: 'zigbee2mqtt/bridge/state'}],
             'expire_after': 30,
             'icon': 'mdi:test',
+            'object_id': 'weather_sensor_humidity'
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/humidity/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -584,8 +605,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'Weather Sensor temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'Weather Sensor',
@@ -600,7 +622,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -611,8 +633,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.humidity }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'Weather Sensor humidity',
+            'object_id': 'weather_sensor_humidity',
             'unique_id': '0x0017880104e45522_humidity_zigbee2mqtt',
+            'origin': origin,
             'enabled_by_default': true,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -627,7 +650,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/humidity/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -669,14 +692,16 @@ describe('HomeAssistant extension', () => {
             "payload_off": "OFF",
             "payload_on": "ON",
             "state_topic": "zigbee2mqtt/my_switch",
+            "object_id": "my_switch",
             "unique_id": "0x0017880104e45541_light_zigbee2mqtt",
+            'origin': origin,
             "value_template": "{{ value_json.state }}"
         }
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/0x0017880104e45541/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -732,8 +757,10 @@ describe('HomeAssistant extension', () => {
             "speed_range_min":1,
             "speed_range_max":4,
             "json_attributes_topic":"zigbee2mqtt/fan",
-            "name":"fan",
+            "name":null,
+            "object_id": "fan",
             "unique_id":"0x0017880104e45548_fan_zigbee2mqtt",
+            'origin': origin,
             "device":{
                "identifiers":[
                   "zigbee2mqtt_0x0017880104e45548"
@@ -749,7 +776,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/fan/0x0017880104e45548/fan/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -799,19 +826,21 @@ describe('HomeAssistant extension', () => {
                 "auto",
                 "off"
             ],
-            "name":"TS0601_thermostat",
+            "name":null,
             "temp_step":0.5,
             "temperature_command_topic":"zigbee2mqtt/TS0601_thermostat/set/current_heating_setpoint",
             "temperature_state_template":"{{ value_json.current_heating_setpoint }}",
             "temperature_state_topic":"zigbee2mqtt/TS0601_thermostat",
             "temperature_unit":"C",
-            "unique_id":"0x0017882104a44559_climate_zigbee2mqtt"
+            "object_id": "ts0601_thermostat",
+            "unique_id":"0x0017882104a44559_climate_zigbee2mqtt",
+            'origin': origin,
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/climate/0x0017882104a44559/climate/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -829,9 +858,12 @@ describe('HomeAssistant extension', () => {
             value_template: `{{ value_json.state }}`,
             state_open: 'OPEN',
             state_closed: 'CLOSE',
+            state_stopped: 'STOP',
             json_attributes_topic: 'zigbee2mqtt/smart vent',
-            name: 'smart vent',
+            name: null,
+            object_id: 'smart_vent',
             unique_id: '0x0017880104e45551_cover_zigbee2mqtt',
+            'origin': origin,
             device:
             {
                 identifiers: [ 'zigbee2mqtt_0x0017880104e45551' ],
@@ -846,7 +878,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/cover/0x0017880104e45551/cover/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -861,25 +893,28 @@ describe('HomeAssistant extension', () => {
                 "sw_version": null
             },
             "json_attributes_topic": "zigbee2mqtt/zigfred_plus/l6",
-            "name": "zigfred_plus_l6",
+            "name": "L6",
             "position_template": "{{ value_json.position }}",
             "position_topic": "zigbee2mqtt/zigfred_plus/l6",
             "set_position_template": "{ \"position_l6\": {{ position }} }",
             "set_position_topic": "zigbee2mqtt/zigfred_plus/l6/set",
+            "state_stopped": 'STOP',
             "state_closed": "CLOSE",
             "state_open": "OPEN",
             "state_topic": "zigbee2mqtt/zigfred_plus/l6",
             "tilt_command_topic": "zigbee2mqtt/zigfred_plus/l6/set/tilt",
             "tilt_status_template": "{{ value_json.tilt }}",
             "tilt_status_topic": "zigbee2mqtt/zigfred_plus/l6",
+            "object_id": "zigfred_plus_l6",
             "unique_id": "0xf4ce368a38be56a1_cover_l6_zigbee2mqtt",
+            'origin': origin,
             "value_template": "{{ value_json.state }}"
         }
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/cover/0xf4ce368a38be56a1/cover_l6/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -898,8 +933,9 @@ describe('HomeAssistant extension', () => {
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
             'enabled_by_default': true,
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -913,7 +949,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'my_custom_discovery_topic/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1025,8 +1061,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -1040,7 +1077,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payloadHA),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1080,7 +1117,7 @@ describe('HomeAssistant extension', () => {
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledWith(
             'zigbee2mqtt/bulb',
-            stringify({"state":"ON","brightness":50,"color_temp":370,"linkquality":99,"power_on_behavior":null, "update_available": null, "update": {"state": null, "installed_version": -1, "latest_version": -1}}),
+            stringify({"state":"ON","color_options":null,"brightness":50,"color_temp":370,"linkquality":99,"power_on_behavior":null, "update_available": null, "update": {"state": null, "installed_version": -1, "latest_version": -1}}),
             { retain: true, qos: 0 },
             expect.any(Function)
         );
@@ -1110,7 +1147,7 @@ describe('HomeAssistant extension', () => {
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledWith(
             'zigbee2mqtt/bulb',
-            stringify({"state":"ON","brightness":50,"color_temp":370,"linkquality":99,"power_on_behavior":null, "update_available": null, "update": {"state": null, "installed_version": -1, "latest_version": -1}}),
+            stringify({"state":"ON","color_options":null,"brightness":50,"color_temp":370,"linkquality":99,"power_on_behavior":null, "update_available": null, "update": {"state": null, "installed_version": -1, "latest_version": -1}}),
             { retain: true, qos: 0 },
             expect.any(Function)
         );
@@ -1161,8 +1198,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -1177,7 +1215,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1190,31 +1228,31 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/humidity/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/pressure/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/battery/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/linkquality/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1243,7 +1281,8 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor_renamed',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor_renamed',
-            'name': 'weather_sensor_renamed_temperature',
+            'object_id': 'weather_sensor_renamed_temperature',
+            'origin': origin,
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -1258,14 +1297,14 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -1277,6 +1316,7 @@ describe('HomeAssistant extension', () => {
                 "subtype":"double",
                 "payload":"double",
                 "topic":"zigbee2mqtt/weather_sensor_renamed/action",
+                'origin': origin,
                 "device":{
                     "identifiers":[
                         "zigbee2mqtt_0x0017880104e45522"
@@ -1287,7 +1327,7 @@ describe('HomeAssistant extension', () => {
                     "manufacturer":"Xiaomi"
                 }
             }),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1313,7 +1353,7 @@ describe('HomeAssistant extension', () => {
             "json_attributes_topic":"zigbee2mqtt/ha_discovery_group_new",
             "max_mireds": 454,
             "min_mireds": 250,
-            "name":"ha_discovery_group_new",
+            "name":null,
             "schema":"json",
             "state_topic":"zigbee2mqtt/ha_discovery_group_new",
             "supported_color_modes":[
@@ -1333,20 +1373,22 @@ describe('HomeAssistant extension', () => {
                 "stop_effect",
                 "stop_hue_effect",
             ],
-            "unique_id":"9_light_zigbee2mqtt"
+            "object_id":"ha_discovery_group_new",
+            "unique_id":"9_light_zigbee2mqtt",
+            'origin': origin,
          };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/1221051039810110150109113116116_9/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/1221051039810110150109113116116_9/light/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1359,7 +1401,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).not.toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             null,
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -1371,8 +1413,9 @@ describe('HomeAssistant extension', () => {
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor_renamed',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor_renamed',
-            'name': 'weather_sensor_renamed_temperature',
+            'object_id': 'weather_sensor_renamed_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor_renamed',
@@ -1386,7 +1429,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1399,8 +1442,10 @@ describe('HomeAssistant extension', () => {
             "enabled_by_default": false,
             "state_topic":"zigbee2mqtt/bulb",
             "json_attributes_topic":"zigbee2mqtt/bulb",
-            "name":"bulb update available",
+            "name":null,
+            "object_id":"bulb_update_available",
             "unique_id":"0x000b57fffec6a5b2_update_available_zigbee2mqtt",
+            'origin': origin,
             "device":{
                 "identifiers":[
                     "zigbee2mqtt_0x000b57fffec6a5b2"
@@ -1418,7 +1463,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/binary_sensor/0x000b57fffec6a5b2/update_available/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1442,6 +1487,7 @@ describe('HomeAssistant extension', () => {
             "subtype":"single",
             "payload":"single",
             "topic":"zigbee2mqtt/button/action",
+            "origin": origin,
             "device":{
                 "identifiers":[
                     "zigbee2mqtt_0x0017880104e45520"
@@ -1456,7 +1502,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/device_automation/0x0017880104e45520/action_single/config',
             stringify(discoverPayloadAction),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -1466,6 +1512,7 @@ describe('HomeAssistant extension', () => {
             "subtype":"single",
             "payload":"single",
             "topic":"zigbee2mqtt/button/click",
+            "origin": origin,
             "device":{
                 "identifiers":[
                     "zigbee2mqtt_0x0017880104e45520"
@@ -1480,7 +1527,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/device_automation/0x0017880104e45520/click_single/config',
             stringify(discoverPayloadClick),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -1526,14 +1573,14 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).not.toHaveBeenCalledWith(
             'homeassistant/device_automation/0x0017880104e45520/action_single/config',
             stringify(discoverPayloadAction),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
         expect(MQTT.publish).not.toHaveBeenCalledWith(
             'homeassistant/device_automation/0x0017880104e45520/click_single/config',
             stringify(discoverPayloadClick),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -1630,6 +1677,7 @@ describe('HomeAssistant extension', () => {
             "subtype":"single",
             "payload":"single",
             "topic":"zigbee2mqtt/button/action",
+            "origin": origin,
             "device":{
                 "identifiers":[
                     "zigbee2mqtt_0x0017880104e45520"
@@ -1644,7 +1692,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/device_automation/0x0017880104e45520/action_single/config',
             stringify(discoverPayload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
 
@@ -1709,7 +1757,7 @@ describe('HomeAssistant extension', () => {
         await MQTT.events.message('homeassistant/light/1221051039810110150109113116116_91231/light/config', stringify({availability: [{topic: 'zigbee2mqtt/bridge/state'}]}));
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledTimes(1);
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/light/1221051039810110150109113116116_91231/light/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/light/1221051039810110150109113116116_91231/light/config', null, {qos: 1, retain: true}, expect.any(Function));
 
         // Existing group -> dont clear
         MQTT.publish.mockClear();
@@ -1722,21 +1770,21 @@ describe('HomeAssistant extension', () => {
         await MQTT.events.message('homeassistant/light/9/light/config', stringify({availability: [{topic: 'zigbee2mqtt/bridge/state'}]}));
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledTimes(1);
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/light/9/light/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/light/9/light/config', null, {qos: 1, retain: true}, expect.any(Function));
 
         // Existing group, non existing config ->  clear
         MQTT.publish.mockClear();
         await MQTT.events.message('homeassistant/light/1221051039810110150109113116116_9/switch/config', stringify({availability: [{topic: 'zigbee2mqtt/bridge/state'}]}));
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledTimes(1);
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/light/1221051039810110150109113116116_9/switch/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/light/1221051039810110150109113116116_9/switch/config', null, {qos: 1, retain: true}, expect.any(Function));
 
         // Non-existing device -> clear
         MQTT.publish.mockClear();
         await MQTT.events.message('homeassistant/sensor/0x123/temperature/config', stringify({availability: [{topic: 'zigbee2mqtt/bridge/state'}]}));
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledTimes(1);
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/sensor/0x123/temperature/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/sensor/0x123/temperature/config', null, {qos: 1, retain: true}, expect.any(Function));
 
         // Existing device -> don't clear
         MQTT.publish.mockClear();
@@ -1755,7 +1803,7 @@ describe('HomeAssistant extension', () => {
         await MQTT.events.message('homeassistant/sensor/0x000b57fffec6a5b2/update_available/config', stringify({availability: [{topic: 'zigbee2mqtt/bridge/state'}]}));
         await flushPromises();
         expect(MQTT.publish).toHaveBeenCalledTimes(1);
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/sensor/0x000b57fffec6a5b2/update_available/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/sensor/0x000b57fffec6a5b2/update_available/config', null, {qos: 1, retain: true}, expect.any(Function));
 
         // Non-existing device but invalid payload -> clear
         MQTT.publish.mockClear();
@@ -1782,11 +1830,11 @@ describe('HomeAssistant extension', () => {
 
         await MQTT.events.message('homeassistant/sensor/0x000b57fffec6a5b2/update_available/config', stringify({availability: [{topic: 'zigbee2mqtt/bridge/state'}]}));
         await flushPromises();
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/sensor/0x000b57fffec6a5b2/update_available/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/sensor/0x000b57fffec6a5b2/update_available/config', null, {qos: 1, retain: true}, expect.any(Function));
         MQTT.publish.mockClear();
         await MQTT.events.message('homeassistant/device_automation/0x000b57fffec6a5b2/action_button_3_single/config', stringify({topic: 'zigbee2mqtt/0x000b57fffec6a5b2/availability'}));
         await flushPromises();
-        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/device_automation/0x000b57fffec6a5b2/action_button_3_single/config', null, {qos: 0, retain: true}, expect.any(Function));
+        expect(MQTT.publish).toHaveBeenCalledWith('homeassistant/device_automation/0x000b57fffec6a5b2/action_button_3_single/config', null, {qos: 1, retain: true}, expect.any(Function));
     });
 
     it('Should not have Home Assistant legacy entity attributes when disabled', async () => {
@@ -1802,8 +1850,9 @@ describe('HomeAssistant extension', () => {
             'state_class': 'measurement',
             'value_template': '{{ value_json.temperature }}',
             'state_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'enabled_by_default': true,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
@@ -1818,7 +1867,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1842,7 +1891,7 @@ describe('HomeAssistant extension', () => {
             "json_attributes_topic":"zigbee2mqtt/ha_discovery_group",
             "max_mireds": 454,
             "min_mireds": 250,
-            "name":"ha_discovery_group",
+            "name":null,
             "schema":"json",
             "state_topic":"zigbee2mqtt/ha_discovery_group",
             "supported_color_modes":[
@@ -1862,13 +1911,15 @@ describe('HomeAssistant extension', () => {
                 "stop_effect",
                 "stop_hue_effect",
             ],
-            "unique_id":"9_light_zigbee2mqtt"
+            "object_id":"ha_discovery_group",
+            "unique_id":"9_light_zigbee2mqtt",
+            'origin': origin,
          };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/1221051039810110150109113116116_9/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1891,7 +1942,7 @@ describe('HomeAssistant extension', () => {
             "max_mireds": 454,
             "min_mireds": 250,
             "json_attributes_topic":"zigbee2mqtt/ha_discovery_group",
-            "name":"ha_discovery_group",
+            "name":null,
             "schema":"json",
             "state_topic":"zigbee2mqtt/ha_discovery_group",
             "supported_color_modes":[
@@ -1911,13 +1962,15 @@ describe('HomeAssistant extension', () => {
                 "stop_effect",
                 "stop_hue_effect",
             ],
-            "unique_id":"9_light_zigbee2mqtt"
+            "object_id":"ha_discovery_group",
+            "unique_id":"9_light_zigbee2mqtt",
+            'origin': origin,
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/1221051039810110150109113116116_9/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1959,19 +2012,21 @@ describe('HomeAssistant extension', () => {
             "json_attributes_topic":"zigbee2mqtt/bulb",
             "max_mireds":454,
             "min_mireds":250,
-            "name":"bulb",
+            "name":null,
             "schema":"json",
             "state_topic":"zigbee2mqtt/bulb",
             "supported_color_modes":[
                "color_temp"
             ],
-            "unique_id":"0x000b57fffec6a5b2_light_zigbee2mqtt"
+            "object_id":"bulb",
+            "unique_id":"0x000b57fffec6a5b2_light_zigbee2mqtt",
+            'origin': origin,
         };
 
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/light/0x000b57fffec6a5b2/light/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -1998,9 +2053,11 @@ describe('HomeAssistant extension', () => {
             "enabled_by_default":false,
             "icon":"mdi:clock",
             "json_attributes_topic":"zigbee2mqtt/bulb",
-            "name":"bulb last seen",
+            "name":"Last seen",
             "state_topic":"zigbee2mqtt/bulb",
+            "object_id": "bulb_last_seen",
             "unique_id":"0x000b57fffec6a5b2_last_seen_zigbee2mqtt",
+            'origin': origin,
             "value_template":"{{ value_json.last_seen }}",
             "device_class": "timestamp",
             "entity_category": "diagnostic"
@@ -2009,7 +2066,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x000b57fffec6a5b2/last_seen/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });
@@ -2030,8 +2087,9 @@ describe('HomeAssistant extension', () => {
             'value_template': "{{ value_json.temperature }}",
             'state_topic': 'zigbee2mqtt/weather_sensor',
             'json_attributes_topic': 'zigbee2mqtt/weather_sensor',
-            'name': 'weather_sensor_temperature',
+            'object_id': 'weather_sensor_temperature',
             'unique_id': '0x0017880104e45522_temperature_zigbee2mqtt',
+            'origin': origin,
             'device': {
                 'identifiers': ['zigbee2mqtt_0x0017880104e45522'],
                 'name': 'weather_sensor',
@@ -2046,7 +2104,7 @@ describe('HomeAssistant extension', () => {
         expect(MQTT.publish).toHaveBeenCalledWith(
             'homeassistant/sensor/0x0017880104e45522/temperature/config',
             stringify(payload),
-            { retain: true, qos: 0 },
+            { retain: true, qos: 1 },
             expect.any(Function),
         );
     });

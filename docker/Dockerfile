@@ -1,4 +1,4 @@
-FROM alpine:3.17.3 as base
+FROM alpine:3.18.4 as base
 
 WORKDIR /app
 RUN apk add --no-cache tzdata eudev tini nodejs
@@ -20,7 +20,7 @@ FROM base as release
 
 COPY --from=dependencies_and_build /app/node_modules ./node_modules
 COPY dist ./dist
-COPY package.json LICENSE index.js data/configuration.yaml ./
+COPY package.json LICENSE index.js data/configuration.yaml data/configuration.example.yaml ./
 
 COPY docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

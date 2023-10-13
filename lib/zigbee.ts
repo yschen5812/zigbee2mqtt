@@ -9,6 +9,7 @@ import Device from './model/device';
 import Group from './model/group';
 import * as ZHEvents from 'zigbee-herdsman/dist/controller/events';
 import bind from 'bind-decorator';
+import {randomInt} from 'crypto';
 
 export default class Zigbee {
     private herdsman: Controller;
@@ -27,7 +28,8 @@ export default class Zigbee {
             network: {
                 panID: settings.get().advanced.pan_id === 'GENERATE' ?
                     this.generatePanID() : settings.get().advanced.pan_id as number,
-                extendedPanID: settings.get().advanced.ext_pan_id,
+                extendedPanID: settings.get().advanced.ext_pan_id === 'GENERATE' ?
+                    this.generateExtPanID() : settings.get().advanced.ext_pan_id as number[],
                 channelList: [settings.get().advanced.channel],
                 networkKey: settings.get().advanced.network_key === 'GENERATE' ?
                     this.generateNetworkKey() : settings.get().advanced.network_key as number[],
@@ -164,13 +166,19 @@ export default class Zigbee {
     }
 
     private generateNetworkKey(): number[] {
-        const key = Array.from({length: 16}, () => Math.floor(Math.random() * 255));
+        const key = Array.from({length: 16}, () => randomInt(256));
         settings.set(['advanced', 'network_key'], key);
         return key;
     }
 
+    private generateExtPanID(): number[] {
+        const key = Array.from({length: 8}, () => randomInt(256));
+        settings.set(['advanced', 'ext_pan_id'], key);
+        return key;
+    }
+
     private generatePanID(): number {
-        const panID = Math.floor(Math.random() * (0xFFFF - 2)) + 1;
+        const panID = randomInt(1, 0xFFFF - 1);
         settings.set(['advanced', 'pan_id'], panID);
         return panID;
     }
@@ -185,6 +193,11 @@ export default class Zigbee {
 
     async backup(): Promise<void> {
         return this.herdsman.backup();
+    }
+
+    async coordinatorCheck(): Promise<{missingRouters: Device[]}> {
+        const check = await this.herdsman.coordinatorCheck();
+        return {missingRouters: check.missingRouters.map((d) => this.resolveDevice(d.ieeeAddr))};
     }
 
     async getNetworkParameters(): Promise<zh.NetworkParameters> {

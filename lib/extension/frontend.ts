@@ -119,11 +119,12 @@ export default class Frontend extends Extension {
     }
 
     @bind private onWebSocketConnection(ws: WebSocket): void {
+        ws.on('error', (msg) => logger.error(`WebSocket error: ${msg.message}`));
         ws.on('message', (data: Buffer, isBinary: boolean) => {
             if (!isBinary && data) {
                 const message = data.toString();
                 const {topic, payload} = JSON.parse(message);
-                this.mqtt.onMessage(`${this.mqttBaseTopic}/${topic}`, stringify(payload));
+                this.mqtt.onMessage(`${this.mqttBaseTopic}/${topic}`, Buffer.from(stringify(payload)));
             }
         });
 

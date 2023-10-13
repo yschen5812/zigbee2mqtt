@@ -682,6 +682,18 @@ describe('Settings', () => {
         }).toThrow(new Error("Device '0x123' already exists"));
     });
 
+    it('Should not allow any string values for ext_pan_id', () => {
+        write(configurationFile, {
+            ...minimalConfig,
+            advanced: {ext_pan_id: 'NOT_GENERATE'},
+        });
+
+        settings.reRead();
+
+        const error = `advanced.ext_pan_id: should be array or 'GENERATE' (is 'NOT_GENERATE')`;
+        expect(settings.validate()).toEqual(expect.arrayContaining([error]));
+    });
+
     it('Should not allow any string values for network_key', () => {
         write(configurationFile, {
             ...minimalConfig,
@@ -776,8 +788,7 @@ describe('Settings', () => {
 
     it('Should throw error when yaml file does not exist', () => {
         settings.testing.clear();
-        const error = `ENOENT: no such file or directory, open '${configurationFile}'`;
-        expect(settings.validate()).toEqual(expect.arrayContaining([error]));
+        expect(settings.validate()[0].startsWith(`ENOENT: no such file or directory, open `)).toBeTruthy();
     });
 
     it('Configuration shouldnt be valid when invalid QOS value is used', async () => {

@@ -1,7 +1,7 @@
 
 import * as settings from '../util/settings';
 import zigbeeHerdsmanConverters from 'zigbee-herdsman-converters';
-import philips from 'zigbee-herdsman-converters/lib/philips';
+import * as philips from 'zigbee-herdsman-converters/lib/philips';
 import logger from '../util/logger';
 import utils from '../util/utils';
 import Extension from './extension';
@@ -13,7 +13,7 @@ import bind from 'bind-decorator';
 const topicRegex = new RegExp(`^(.+?)(?:/(${utils.endpointNames.join('|')}|\\d+))?/(get|set)(?:/(.+))?`);
 const propertyEndpointRegex = new RegExp(`^(.*?)_(${utils.endpointNames.join('|')})$`);
 const stateValues = ['on', 'off', 'toggle', 'open', 'close', 'stop', 'lock', 'unlock'];
-const sceneConverterKeys = ['scene_store', 'scene_add', 'scene_remove', 'scene_remove_all'];
+const sceneConverterKeys = ['scene_store', 'scene_add', 'scene_remove', 'scene_remove_all', 'scene_rename'];
 
 // Legacy: don't provide default converters anymore, this is required by older z2m installs not saving group members
 const defaultGroupConverters = [
@@ -144,6 +144,7 @@ export default class Publish extends Extension {
         {
             if (Array.isArray(definition)) {
                 const c = new Set(definition.map((d) => d.toZigbee).flat());
+                // @ts-expect-error
                 if (c.size == 0) converters = defaultGroupConverters;
                 else converters = Array.from(c);
             } else if (definition) {

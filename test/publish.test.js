@@ -71,12 +71,7 @@ describe('Publish', () => {
     });
 
     it('Should corretly handle mallformed messages', async () => {
-        await MQTT.events.message('zigbee2mqtt/foo', undefined);
-        await MQTT.events.message('zigbee2mqtt/foo', null);
         await MQTT.events.message('zigbee2mqtt/foo', "");
-
-        await MQTT.events.message('zigbee2mqtt/bulb_color/set', undefined);
-        await MQTT.events.message('zigbee2mqtt/bulb_color/set', null);
         await MQTT.events.message('zigbee2mqtt/bulb_color/set', "");
         await flushPromises();
         expectNothingPublished();
@@ -964,7 +959,7 @@ describe('Publish', () => {
         await MQTT.events.message('zigbee2mqtt/bulb_color/set', stringify(payload));
         await flushPromises();
         expect(endpoint.command).toHaveBeenCalledTimes(1);
-        expect(endpoint.command.mock.calls[0]).toEqual(["lightingColorCtrl", "enhancedMoveToHueAndSaturation", {"direction": 0, "enhancehue": 44877, "saturation": 200, "transtime": 0,}, {}]);
+        expect(endpoint.command.mock.calls[0]).toEqual(["lightingColorCtrl", "enhancedMoveToHueAndSaturation", {"direction": 0, "enhancehue": 45510, "saturation": 127, "transtime": 0,}, {}]);
         expect(MQTT.publish).toHaveBeenCalledTimes(1);
         expect(MQTT.publish.mock.calls[0][0]).toStrictEqual('zigbee2mqtt/bulb_color');
         expect(JSON.parse(MQTT.publish.mock.calls[0][1])).toStrictEqual({"color":{"hue":250,"saturation":50}, "color_mode": "hs"});
